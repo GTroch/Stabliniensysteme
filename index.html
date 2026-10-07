@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stabliniensystem & Organisationsformen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1b1930;--ink-soft:#4a4766;--muted:#7d7a94;
+    --paper:#f6f7fb;--card:#ffffff;--line:#c9ccdd;--line-strong:#9aa0bd;
+    --accent:#5848c9;
+    --e-bg:#e6f1fb;--e-bd:#185fa5;--e-tx:#0c447c;     /* Einliniensystem */
+    --s-bg:#faeeda;--s-bd:#ba7517;--s-tx:#633806;     /* Stabliniensystem */
+    --f-bg:#eeedfd;--f-bd:#5848c9;--f-tx:#362a8f;     /* funktional */
+    --d-bg:#e2f5ee;--d-bd:#0e8e6e;--d-tx:#0a5f4a;     /* divisional */
+    --ok:#0e8e6e;--ok-bg:#e2f5ee;--bad:#c23b4b;--bad-bg:#fcebed;
+    --sans:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    --disp:'Space Grotesk',var(--sans);--r:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  h1,h2,h3{font-family:var(--disp);font-weight:600;letter-spacing:-.01em;margin:0}
+  header.hero{padding:54px 0 26px}
+  .kicker{font-family:var(--disp);font-weight:500;color:var(--muted);font-size:15px;margin:0 0 12px}
+  .hero h1{font-size:clamp(28px,4.6vw,44px);font-weight:700;line-height:1.12}
+  .hero .sub{font-size:18px;color:var(--ink-soft);max-width:66ch;margin-top:14px}
+  .recap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+  @media(max-width:640px){.recap{grid-template-columns:1fr}}
+  .rc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;font-size:14.5px;color:var(--ink-soft)}
+  .rc b{color:var(--ink)}
+  .rc.stab{border-left:4px solid var(--s-bd)} .rc.divv{border-left:4px solid var(--d-bd)}
+
+  section.task{padding:34px 0;border-top:1px solid var(--line)}
+  .eyebrow{font-family:var(--disp);font-weight:600;color:var(--accent);font-size:14px;margin:0 0 6px}
+  h2{font-size:clamp(21px,3vw,27px)}
+  .lead{font-size:15.5px;color:var(--ink-soft);max-width:70ch;margin:8px 0 16px}
+  .scorebar{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:14px;color:var(--muted)}
+  .pill{background:var(--f-bg);color:var(--f-tx);font-weight:600;border-radius:999px;padding:4px 12px}
+
+  /* ---- bucket task (Zuordnung) ---- */
+  .pool{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
+  .ccard{font:500 14px var(--sans);background:var(--card);border:1.5px solid var(--line-strong);color:var(--ink);padding:9px 13px;border-radius:10px;cursor:grab;user-select:none;max-width:420px;transition:transform .08s,box-shadow .15s,opacity .15s}
+  .ccard:active{transform:scale(.98)}
+  .ccard.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--f-bg)}
+  .ccard.placed{cursor:pointer}
+  .buckets{display:flex;flex-direction:column;gap:12px}
+  .bucket{display:flex;gap:12px;align-items:stretch;border:1.5px dashed var(--line-strong);border-radius:12px;overflow:hidden;background:var(--card)}
+  .bucket.over{border-color:var(--accent);background:var(--f-bg)}
+  .bk-label{flex:0 0 190px;padding:12px 14px;font:600 15px var(--disp);display:flex;align-items:center}
+  .bk-drop{flex:1;padding:10px;display:flex;flex-wrap:wrap;gap:8px;min-height:58px;align-content:center}
+  .bk-e{background:var(--e-bg);color:var(--e-tx)} .bk-s{background:var(--s-bg);color:var(--s-tx)}
+  .bk-f{background:var(--f-bg);color:var(--f-tx)} .bk-d{background:var(--d-bg);color:var(--d-tx)}
+  .ccard.ok{border-color:var(--ok);background:var(--ok-bg);color:var(--d-tx)}
+  .ccard.bad{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+
+  /* ---- mcq task (Problem -> Maßnahme) ---- */
+  .q{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin:14px 0}
+  .q .scn{font-size:15.5px;margin-bottom:12px}
+  .q .scn b{font-weight:600}
+  .opts{display:flex;flex-direction:column;gap:8px}
+  .opt{text-align:left;font:500 14.5px var(--sans);cursor:pointer;border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink);padding:11px 14px;border-radius:10px;transition:border-color .15s,background .15s}
+  .opt:hover{border-color:var(--ink-soft)}
+  .opt.correct{background:var(--ok-bg);border-color:var(--ok);color:var(--d-tx)}
+  .opt.wrong{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+  .why{font-size:14px;margin-top:11px;padding:10px 12px;border-radius:10px;background:var(--f-bg);color:var(--f-tx);display:none}
+  .why.show{display:block}
+
+  /* ---- place task (Stabsstelle) ---- */
+  .boardwrap{overflow-x:auto;padding:4px 0}
+  .board{position:relative;margin:0 auto}
+  .board svg.conn{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .node{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:9px;font-weight:600;font-size:12.5px;padding:3px 6px;line-height:1.15}
+  .node.gl{background:#f1efe8;border:1.5px solid #8a887f;color:#44433f}
+  .node.lei{background:var(--e-bg);border:1.5px solid var(--e-bd);color:var(--e-tx)}
+  .node.abt{background:var(--d-bg);border:1.5px solid var(--d-bd);color:var(--d-tx)}
+  .dz{position:absolute;border:1.6px dashed var(--line-strong);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;cursor:pointer;background:rgba(255,255,255,.6);transition:border-color .15s,background .15s}
+  .dz.over{border-color:var(--accent);background:var(--f-bg)}
+  .dz.filled{border-style:solid}
+  .dz.ok{background:var(--s-bg);border-color:var(--s-bd);color:var(--s-tx)}
+  .dz.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+  .dz.z-stab{background:var(--s-bg);opacity:.5}
+
+  /* ---- build board (large organigram) ---- */
+  .node.bslot{background:var(--card);border:1.6px dashed var(--line-strong);color:var(--ink);cursor:pointer;font-size:12px}
+  .node.bslot.over{border-color:var(--accent);background:var(--f-bg)}
+  .node.bslot.filled{border-style:solid}
+  .node.bslot.ok.lvl-sparte{background:var(--f-bg);border-color:var(--f-bd);color:var(--f-tx)}
+  .node.bslot.ok.lvl-func{background:var(--d-bg);border-color:var(--d-bd);color:var(--d-tx)}
+  .node.bslot.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+  .decide{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 6px}
+  .decide .opt{flex:0 1 auto}
+  .refwrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 10px 6px;margin:6px 0 14px}
+  .refwrap .rl{font-size:12.5px;color:var(--muted);text-align:center;margin:2px 0 8px;font-weight:600}
+  .gate{margin:6px 0 2px}
+  .locked{opacity:.45;pointer-events:none}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn{font:600 15px var(--disp);border:0;border-radius:10px;padding:10px 18px;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--line-strong)}
+  .btn:active{transform:translateY(1px)}
+  .fb{font-size:14.5px;margin-top:12px;min-height:1.2em;color:var(--ink-soft)}
+  .fb.ok{color:var(--d-tx)} .fb.no{color:var(--bad)}
+
+  .insight{background:var(--ink);color:#fff;border-radius:var(--r);padding:24px 26px;margin-top:8px}
+  .insight h3{color:#fff;font-size:19px;margin-bottom:10px}
+  .insight p{color:#d9d8ea;margin:0 0 8px}
+  .insight b.s{color:#f3d08a} .insight b.d{color:#86e3cb}
+  footer{padding:26px 0 60px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:24px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Wirtschaftsinformatik · Jahrgangsstufe 10</p>
+    <h1>Stabliniensystem & Organisationsformen</h1>
+    <p class="sub">Lerne an Beispielen aus der Praxis, wann welche Organisationsform passt – und vor allem <b>warum</b> es sinnvoll sein kann, eine Stabsstelle einzurichten oder von funktional auf divisional umzustellen.</p>
+    <div class="recap">
+      <div class="rc stab"><b>Stabliniensystem:</b> Einliniensystem + eine <b>Stabsstelle</b>, die die Leitung mit Fachwissen <b>berät</b> – aber keine Weisungsbefugnis hat.</div>
+      <div class="rc divv"><b>Funktional → divisional:</b> funktional = gegliedert nach Aufgaben; divisional = nach Sparten (Produkte/Regionen) mit eigenen Funktionen.</div>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="main"></main>
+<footer><div class="wrap">Unterrichtsmaterial Wirtschaftsinformatik · Stabliniensystem, funktionale & divisionale Organisation</div></footer>
+
+<script>
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const main=document.getElementById('main');
+
+/* =================== Aufgabe 1: Zuordnung =================== */
+const FORMS=[
+ {key:"e",label:"Einliniensystem",cls:"bk-e"},
+ {key:"s",label:"Stabliniensystem",cls:"bk-s"},
+ {key:"f",label:"Funktionale Organisation",cls:"bk-f"},
+ {key:"d",label:"Divisionale Organisation",cls:"bk-d"},
+];
+const CARDS=[
+ {t:"Neu gegründete 3-Personen-Werbeagentur: die Gründerin leitet, zwei Angestellte berichten direkt an sie.",f:"e"},
+ {t:"Kleine Tischlerei: der Meister führt, alle Gesellen sind ihm direkt unterstellt.",f:"e"},
+ {t:"Der Geschäftsführung wird eine Abteilung Recht zugeordnet, die berät, aber keiner Abteilung Weisungen erteilen darf.",f:"s"},
+ {t:"Der Leitung ist eine Stelle Controlling zugeordnet, die Zahlen aufbereitet und Entscheidungen vorbereitet – ohne Weisungsbefugnis.",f:"s"},
+ {t:"Ein Industriebetrieb ist unter der Leitung in Einkauf, Produktion und Vertrieb gegliedert.",f:"f"},
+ {t:"Ein mittelständischer Betrieb gliedert sich in die Abteilungen Beschaffung, Fertigung und Verwaltung.",f:"f"},
+ {t:"Ein Großkonzern führt getrennte Geschäftsbereiche für Pkw, Lkw und Motorräder – jeder mit eigenem Einkauf, eigener Produktion und eigenem Vertrieb.",f:"d"},
+ {t:"Ein Verkehrsbetrieb ordnet sich nach Bus, Straßenbahn und U-Bahn – jede Sparte eigenständig.",f:"d"},
+];
+
+function renderBucketTask(){
+  const sec=document.createElement('section');sec.className='task';
+  sec.innerHTML=`<p class="eyebrow">Aufgabe 1 · Zuordnung</p><h2>Welche Organisationsform passt?</h2>
+    <p class="lead">Ziehe jede Beschreibung in die passende Organisationsform – oder tippe erst eine Karte an und dann eine Zeile.</p>
+    <div class="scorebar"><span class="pill" id="s1pill">0 / ${CARDS.length}</span><span>richtig zugeordnet</span></div>`;
+  const pool=document.createElement('div');pool.className='pool';
+  const buckets=document.createElement('div');buckets.className='buckets';
+  const state={}; // cardId -> formKey
+  let selected=null;
+  const cards={};
+  shuffle(CARDS.map((c,i)=>({...c,id:'c'+i}))).forEach(c=>{
+    const el=document.createElement('div');el.className='ccard';el.textContent=c.t;el.draggable=true;el.dataset.id=c.id;el.dataset.f=c.f;
+    cards[c.id]=el;
+    el.addEventListener('click',()=>{if(selected===el){el.classList.remove('sel');selected=null;}else{if(selected)selected.classList.remove('sel');selected=el;el.classList.add('sel');}});
+    el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',c.id);selected=el;});
+    pool.appendChild(el);
+  });
+  const drops={};
+  FORMS.forEach(f=>{
+    const b=document.createElement('div');b.className='bucket';
+    b.innerHTML=`<div class="bk-label ${f.cls}">${f.label}</div>`;
+    const d=document.createElement('div');d.className='bk-drop';drops[f.key]=d;
+    d.addEventListener('dragover',e=>{e.preventDefault();b.classList.add('over');});
+    d.addEventListener('dragleave',()=>b.classList.remove('over'));
+    d.addEventListener('drop',e=>{e.preventDefault();b.classList.remove('over');place(e.dataTransfer.getData('text'),f.key);});
+    d.addEventListener('click',()=>{if(selected)place(selected.dataset.id,f.key);});
+    b.appendChild(d);buckets.appendChild(b);
+  });
+  function place(id,fk){
+    const el=cards[id];if(!el)return;
+    state[id]=fk;el.classList.remove('sel','ok','bad');el.classList.add('placed');
+    drops[fk].appendChild(el);
+    if(selected){selected.classList.remove('sel');selected=null;}
+    fb.textContent='';fb.className='fb';
+  }
+  sec.appendChild(pool);sec.appendChild(buckets);
+  const act=document.createElement('div');act.className='actions';
+  const bc=document.createElement('button');bc.className='btn primary';bc.textContent='Prüfen';
+  const br=document.createElement('button');br.className='btn ghost';br.textContent='Zurücksetzen';
+  act.append(bc,br);const fb=document.createElement('div');fb.className='fb';
+  bc.addEventListener('click',()=>{
+    if(Object.keys(state).length<CARDS.length){fb.textContent='Es sind noch nicht alle Karten zugeordnet.';fb.className='fb no';return;}
+    let ok=0;
+    Object.entries(state).forEach(([id,fk])=>{const el=cards[id];const right=el.dataset.f===fk;el.classList.toggle('ok',right);el.classList.toggle('bad',!right);if(right)ok++;});
+    document.getElementById('s1pill').textContent=ok+' / '+CARDS.length;
+    fb.textContent=ok===CARDS.length?'Perfekt! Alle Beschreibungen richtig zugeordnet.':'Die rot markierten Karten passen noch nicht. Tipp: Stab = berät ohne Weisung; funktional = nach Aufgaben; divisional = nach Sparten.';
+    fb.className='fb '+(ok===CARDS.length?'ok':'no');
+  });
+  br.addEventListener('click',()=>{for(const k in state)delete state[k];Object.values(cards).forEach(el=>{el.className='ccard';pool.appendChild(el);});selected=null;fb.textContent='';fb.className='fb';document.getElementById('s1pill').textContent='0 / '+CARDS.length;});
+  sec.appendChild(act);sec.appendChild(fb);
+  return sec;
+}
+
+/* =================== Aufgabe 2: Problem -> Maßnahme =================== */
+const MCQ=[
+ {scn:"Die GmbH wächst. Die Geschäftsleitung muss immer häufiger über komplexe <b>Rechts- und Datenschutzfragen</b> entscheiden, hat dafür aber weder Zeit noch Spezialwissen. Die Linienabteilungen sollen weiterhin klar geführt werden.",
+  opts:["Eine Stabsstelle (z. B. Recht/Datenschutz) einrichten","Auf eine divisionale Organisation umstellen","Nichts ändern – die Leitung entscheidet weiter allein"],a:0,
+  why:"Richtig: Eine <b>Stabsstelle</b> bündelt das fehlende Fachwissen und entlastet die Leitung bei Entscheidungen – ohne die bestehende Linienstruktur zu verändern. Genau dafür gibt es Stäbe."},
+ {scn:"Ein Hersteller bietet inzwischen <b>drei völlig verschiedene Produktgruppen</b> mit eigenen Märkten und Kunden an. Die zentrale Produktions- und Vertriebsleitung ist überlastet und reagiert zu langsam auf die unterschiedlichen Märkte.",
+  opts:["Eine Stabsstelle einrichten","Auf eine divisionale Organisation (Sparten) umstellen","Mehr Mitarbeiter in die zentrale Produktion einstellen"],a:1,
+  why:"Richtig: Bei sehr <b>unterschiedlichen Produkten/Märkten</b> ist die funktionale Zentrale schnell überlastet. Eigenständige <b>Sparten</b> (divisional) können kundennah und schnell auf ihren Markt reagieren."},
+ {scn:"Ein <b>kleiner Familienbetrieb</b> mit einem einzigen Produkt und 15 Mitarbeitenden läuft reibungslos. Die Leitung überlegt, ob sie die Struktur ändern soll.",
+  opts:["Auf divisional umstellen","Mehrere Stabsstellen einrichten","Beim einfachen Einliniensystem bleiben"],a:2,
+  why:"Richtig: Es gibt <b>keine Notwendigkeit</b> zu ändern. Zusätzliche Stäbe oder Sparten würden nur Kosten verursachen. Eine Organisationsform ändert man erst, wenn ein echtes Problem entsteht."},
+ {scn:"Die Geschäftsführung trifft viele Entscheidungen <b>ohne fundierte Zahlen</b>. Es fehlt eine Stelle, die Daten auswertet und Empfehlungen gibt – die Weisungswege sollen unverändert bleiben.",
+  opts:["Eine Stabsstelle Controlling einrichten","Auf divisional umstellen","Eine zweite Geschäftsführung einsetzen"],a:0,
+  why:"Richtig: Eine <b>Stabsstelle Controlling</b> liefert die fehlenden Auswertungen und bereitet Entscheidungen vor – beratend, ohne die Weisungswege zu verändern."},
+ {scn:"Ein Konzern expandiert in <b>drei Länder</b> mit sehr unterschiedlichen Gesetzen, Sprachen und Kundenwünschen. Eine zentrale Leitung kann die regionalen Unterschiede kaum noch steuern.",
+  opts:["Eine Stabsstelle einrichten","Auf eine divisionale Organisation nach Regionen umstellen","Alle Entscheidungen weiter zentral treffen"],a:1,
+  why:"Richtig: Bei starken <b>regionalen Unterschieden</b> helfen eigenständige <b>Regionssparten</b> (divisional), die vor Ort passend entscheiden – die Zentrale kann das allein nicht leisten."},
+];
+function renderMCQTask(){
+  const sec=document.createElement('section');sec.className='task';
+  sec.innerHTML=`<p class="eyebrow">Aufgabe 2 · Problem erkennen</p><h2>Welche Maßnahme ist sinnvoll – und warum?</h2>
+    <p class="lead">Lies jedes Problem und wähle die passende Maßnahme. Du erfährst sofort, <b>warum</b> sie passt.</p>
+    <div class="scorebar"><span class="pill" id="s2pill">0 / ${MCQ.length}</span><span>richtig gelöst</span></div>`;
+  let score=0;const done=new Set();
+  MCQ.forEach((m,i)=>{
+    const q=document.createElement('div');q.className='q';
+    q.innerHTML=`<div class="scn"><b>${i+1}.</b> ${m.scn}</div>`;
+    const opts=document.createElement('div');opts.className='opts';
+    const why=document.createElement('div');why.className='why';why.innerHTML=m.why;
+    m.opts.forEach((o,j)=>{
+      const b=document.createElement('button');b.className='opt';b.textContent=o;
+      b.addEventListener('click',()=>{
+        const correct=j===m.a;
+        opts.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===m.a)x.classList.add('correct');});
+        if(!correct)b.classList.add('wrong');
+        why.classList.add('show');
+        if(correct&&!done.has(i)){done.add(i);score++;document.getElementById('s2pill').textContent=score+' / '+MCQ.length;}
+      });
+      opts.appendChild(b);
+    });
+    q.appendChild(opts);q.appendChild(why);sec.appendChild(q);
+  });
+  return sec;
+}
+
+/* =================== Aufgabe 3: Stabsstelle platzieren =================== */
+function renderPlaceTask(){
+  const sec=document.createElement('section');sec.className='task';
+  sec.innerHTML=`<p class="eyebrow">Aufgabe 3 · Richtig einbauen</p><h2>Wohin gehört die Stabsstelle?</h2>
+    <p class="lead">Das Unternehmen richtet eine <b>Stabsstelle Recht</b> ein. Ziehe sie an die richtige Stelle im Organigramm – oder tippe sie an und dann eine Position.</p>`;
+  // chip
+  const pool=document.createElement('div');pool.className='pool';
+  const chip=document.createElement('div');chip.className='ccard';chip.textContent='Stabsstelle Recht';chip.draggable=true;chip.style.maxWidth='none';
+  let selected=null;
+  chip.addEventListener('click',()=>{if(selected===chip){chip.classList.remove('sel');selected=null;}else{selected=chip;chip.classList.add('sel');}});
+  chip.addEventListener('dragstart',e=>{e.dataTransfer.setData('text','stab');selected=chip;});
+  pool.appendChild(chip);sec.appendChild(pool);
+
+  const W=760,H=250;
+  const bw=document.createElement('div');bw.className='boardwrap';
+  const board=document.createElement('div');board.className='board';board.style.width=W+'px';board.style.height=H+'px';
+  // fixed nodes
+  const UL={cx:380,y:16,w:200,h:44};
+  const lei=[{t:"Kaufmänn. Leitung",cx:200,y:150,w:180,h:40},{t:"Technische Leitung",cx:560,y:150,w:180,h:40}];
+  // connectors
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','conn');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('preserveAspectRatio','none');
+  function line(x1,y1,x2,y2,dash){const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('stroke','#9aa0bd');l.setAttribute('stroke-width','1.4');if(dash)l.setAttribute('stroke-dasharray','4 3');svg.appendChild(l);}
+  line(UL.cx,UL.y+UL.h,UL.cx,118);line(200,118,560,118);lei.forEach(L=>line(L.cx,118,L.cx,L.y));
+  // side line to correct zone (drawn faint)
+  line(UL.cx+UL.w/2,UL.y+UL.h/2,UL.cx+UL.w/2+70,UL.y+UL.h/2,true);
+  board.appendChild(svg);
+  function mk(cls,x,y,w,h,txt){const d=document.createElement('div');d.className='node '+cls;d.style.left=(x-w/2)+'px';d.style.top=y+'px';d.style.width=w+'px';d.style.height=h+'px';d.textContent=txt;board.appendChild(d);return d;}
+  mk('gl',UL.cx,UL.y,UL.w,UL.h,'Unternehmensleitung');
+  lei.forEach(L=>mk('lei',L.cx,L.y,L.w,L.h,L.t));
+  mk('abt',120,220,150,36,'Einkauf');mk('abt',280,220,150,36,'Vertrieb');
+  mk('abt',480,220,150,36,'Fertigung');mk('abt',640,220,150,36,'Lager');
+  // drop zones: A = beside UL (correct), B = in the line below UL (wrong)
+  const zones=[
+   {id:'A',x:UL.cx+UL.w/2+70,y:UL.y+2,w:150,h:40,correct:true,label:'hierher?'},
+   {id:'B',x:UL.cx,y:86,w:150,h:30,correct:false,label:'oder hierher?'},
+  ];
+  let placedZone=null;
+  zones.forEach(z=>{
+    const d=document.createElement('div');d.className='dz';d.style.left=(z.x-z.w/2)+'px';d.style.top=z.y+'px';d.style.width=z.w+'px';d.style.height=z.h+'px';d.textContent=z.label;d.dataset.id=z.id;
+    d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('over');});
+    d.addEventListener('dragleave',()=>d.classList.remove('over'));
+    d.addEventListener('drop',e=>{e.preventDefault();d.classList.remove('over');placeStab(z,d);});
+    d.addEventListener('click',()=>{if(selected)placeStab(z,d);});
+    board.appendChild(d);z._el=d;
+  });
+  function placeStab(z,d){
+    zones.forEach(x=>{x._el.classList.remove('filled','ok','bad');x._el.textContent=x.label;});
+    d.classList.add('filled');d.textContent='Stabsstelle Recht';placedZone=z;
+    chip.classList.remove('sel');selected=null;chip.style.opacity='.3';chip.style.pointerEvents='none';
+    fb.textContent='';fb.className='fb';
+  }
+  bw.appendChild(board);sec.appendChild(bw);
+  const act=document.createElement('div');act.className='actions';
+  const bc=document.createElement('button');bc.className='btn primary';bc.textContent='Prüfen';
+  const br=document.createElement('button');br.className='btn ghost';br.textContent='Zurücksetzen';
+  act.append(bc,br);const fb=document.createElement('div');fb.className='fb';
+  bc.addEventListener('click',()=>{
+    if(!placedZone){fb.textContent='Ziehe die Stabsstelle zuerst an eine Position.';fb.className='fb no';return;}
+    zones.forEach(z=>{if(z===placedZone)z._el.classList.add(z.correct?'ok':'bad');});
+    if(placedZone.correct){fb.innerHTML='Richtig! Die Stabsstelle steht <b>neben der Leitung</b> und ist ihr nur beratend zugeordnet – sie liegt außerhalb des Weisungswegs.';fb.className='fb ok';}
+    else{fb.innerHTML='Nicht ganz: Eine Stabsstelle steht <b>nicht im Weisungsweg</b> der Linie. Sie wird der Leitung <b>seitlich</b> zugeordnet und darf keine Anweisungen nach unten geben.';fb.className='fb no';}
+  });
+  br.addEventListener('click',()=>{zones.forEach(z=>{z._el.className='dz';z._el.textContent=z.label;});placedZone=null;chip.style.opacity='';chip.style.pointerEvents='';chip.classList.remove('sel');selected=null;fb.textContent='';fb.className='fb';});
+  sec.appendChild(act);sec.appendChild(fb);
+  return sec;
+}
+
+/* =================== Aufgabe 4: Stabsstelle – ja/nein + wo (großes Organigramm) =================== */
+function renderDecideStabTask(){
+  const sec=document.createElement('section');sec.className='task';
+  sec.innerHTML=`<p class="eyebrow">Aufgabe 4 · Entscheiden & einbauen</p><h2>Braucht die MediTech AG eine Stabsstelle – und wo?</h2>
+    <p class="lead">Die <b>MediTech AG</b> (Medizingeräte, 800 Beschäftigte) ist funktional gegliedert. Durch neue EU-Vorschriften muss ständig geprüft werden, ob die Produkte <b>regulatorisch zugelassen</b> sind – dieses Spezialwissen fehlt in <b>allen</b> Bereichen. Die klare Linienführung soll erhalten bleiben.</p>`;
+
+  // Step 1 – decision Ja/Nein
+  const g1=document.createElement('div');g1.className='gate';
+  g1.innerHTML=`<p style="font-weight:600;margin:0 0 8px">1. Sollte eine Stabsstelle eingerichtet werden?</p>`;
+  const dec=document.createElement('div');dec.className='decide';
+  const why1=document.createElement('div');why1.className='why';
+  const optsTxt=["Ja – eine Stabsstelle „Regulatory Affairs“ einrichten","Nein – jede Abteilung regelt das selbst"];
+  const ans1=0;
+  let stepOpen=false;
+  optsTxt.forEach((o,j)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.addEventListener('click',()=>{
+      dec.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===ans1)x.classList.add('correct');});
+      if(j!==ans1)b.classList.add('wrong');
+      why1.innerHTML=j===ans1
+        ?"Richtig: Das Fachwissen fehlt <b>unternehmensweit</b> und die Linie soll bleiben – genau dafür ist eine <b>Stabsstelle</b> da (Fachwissen bündeln, Leitung beraten, ohne Weisungsbefugnis)."
+        :"Nicht ideal: Jede Abteilung baut dann dasselbe Spezialwissen doppelt auf – teuer und uneinheitlich. Besser <b>eine</b> zentrale Stabsstelle.";
+      why1.classList.add('show');
+      if(!stepOpen){stepOpen=true;board2.classList.remove('locked');g2.style.display='block';}
+    });
+    dec.appendChild(b);
+  });
+  g1.appendChild(dec);g1.appendChild(why1);sec.appendChild(g1);
+
+  // Step 2 – place in big organigram
+  const g2=document.createElement('div');g2.style.display='none';
+  g2.innerHTML=`<p style="font-weight:600;margin:16px 0 6px">2. Wohin gehört die Stabsstelle? Ziehe sie an die beste Position.</p>`;
+  const pool=document.createElement('div');pool.className='pool';
+  const chip=document.createElement('div');chip.className='ccard';chip.textContent='Stabsstelle Regulatory Affairs';chip.draggable=true;chip.style.maxWidth='none';
+  let selected=null;
+  chip.addEventListener('click',()=>{if(selected===chip){chip.classList.remove('sel');selected=null;}else{selected=chip;chip.classList.add('sel');}});
+  chip.addEventListener('dragstart',e=>{e.dataTransfer.setData('text','stab');selected=chip;});
+  pool.appendChild(chip);g2.appendChild(pool);
+
+  const board2=document.createElement('div');board2.className='locked';
+  const W=1000,H=300;
+  const bw=document.createElement('div');bw.className='boardwrap';
+  const board=document.createElement('div');board.className='board';board.style.width=W+'px';board.style.height=H+'px';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','conn');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('preserveAspectRatio','none');
+  function line(x1,y1,x2,y2,dash){const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('stroke','#9aa0bd');l.setAttribute('stroke-width','1.4');if(dash)l.setAttribute('stroke-dasharray','4 3');svg.appendChild(l);}
+  const VOR={cx:500,y:14,w:200,h:44};
+  const ber=[{t:"Entwicklung",cx:180},{t:"Produktion",cx:500},{t:"Vertrieb",cx:820}];
+  const abt={180:[["Konstruktion",110],["Prüflabor",250]],500:[["Fertigung",430],["Montage",570]],820:[["Inland",750],["Export",890]]};
+  line(VOR.cx,VOR.y+VOR.h,VOR.cx,92);line(180,92,820,92);ber.forEach(B=>line(B.cx,92,B.cx,110));
+  Object.entries(abt).forEach(([pc,kids])=>{pc=+pc;line(pc,152,pc,174);line(kids[0][1],174,kids[1][1],174);kids.forEach(([t,c])=>line(c,174,c,192));});
+  // side line hint to top-right zone
+  line(VOR.cx+VOR.w/2,VOR.y+VOR.h/2,VOR.cx+VOR.w/2+80,VOR.y+VOR.h/2,true);
+  board.appendChild(svg);
+  function mk(cls,x,y,w,h,txt){const d=document.createElement('div');d.className='node '+cls;d.style.left=(x-w/2)+'px';d.style.top=y+'px';d.style.width=w+'px';d.style.height=h+'px';d.textContent=txt;board.appendChild(d);}
+  mk('gl',VOR.cx,VOR.y,VOR.w,VOR.h,'Vorstand');
+  ber.forEach(B=>mk('lei',B.cx,110,190,42,B.t));
+  Object.values(abt).forEach(kids=>kids.forEach(([t,c])=>mk('abt',c,192,140,38,t)));
+  const zones=[
+   {id:'A',x:VOR.cx+VOR.w/2+80+80,y:VOR.y+2,w:160,h:40,correct:true,label:'hierher?'},
+   {id:'B',x:660,y:111,w:130,h:40,correct:false,label:'oder hier?'},
+   {id:'C',x:VOR.cx,y:70,w:150,h:26,correct:false,label:'oder hier?'},
+  ];
+  let placed=null;
+  zones.forEach(z=>{
+    const d=document.createElement('div');d.className='dz';d.style.left=(z.x-z.w/2)+'px';d.style.top=z.y+'px';d.style.width=z.w+'px';d.style.height=z.h+'px';d.textContent=z.label;
+    d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('over');});
+    d.addEventListener('dragleave',()=>d.classList.remove('over'));
+    d.addEventListener('drop',e=>{e.preventDefault();d.classList.remove('over');put(z,d);});
+    d.addEventListener('click',()=>{if(selected)put(z,d);});
+    board.appendChild(d);z._el=d;
+  });
+  function put(z,d){zones.forEach(x=>{x._el.classList.remove('filled','ok','bad');x._el.textContent=x.label;});d.classList.add('filled');d.textContent='Regulatory Affairs';placed=z;chip.classList.remove('sel');selected=null;chip.style.opacity='.3';chip.style.pointerEvents='none';fb.textContent='';fb.className='fb';}
+  bw.appendChild(board);board2.appendChild(bw);g2.appendChild(board2);
+  const act=document.createElement('div');act.className='actions';
+  const bc=document.createElement('button');bc.className='btn primary';bc.textContent='Prüfen';
+  const br=document.createElement('button');br.className='btn ghost';br.textContent='Zurücksetzen';
+  act.append(bc,br);const fb=document.createElement('div');fb.className='fb';
+  bc.addEventListener('click',()=>{
+    if(!placed){fb.textContent='Ziehe die Stabsstelle zuerst an eine Position.';fb.className='fb no';return;}
+    zones.forEach(z=>{if(z===placed)z._el.classList.add(z.correct?'ok':'bad');});
+    if(placed.correct){fb.innerHTML='Richtig! Das Spezialwissen wird <b>unternehmensweit</b> gebraucht – deshalb sitzt die Stabsstelle <b>neben dem Vorstand</b> (beratend, außerhalb der Linie) und steht allen Bereichen zur Verfügung.';fb.className='fb ok';}
+    else if(placed.id==='B'){fb.innerHTML='Nicht optimal: Neben einer einzelnen Bereichsleitung würde der Stab nur <b>einem</b> Bereich helfen. Die Zulassung betrifft aber <b>alle</b> Bereiche → Stab bei der obersten Leitung.';fb.className='fb no';}
+    else{fb.innerHTML='Nein: Eine Stabsstelle steht <b>nie im Weisungsweg</b> der Linie, sondern seitlich neben einer Leitung.';fb.className='fb no';}
+  });
+  br.addEventListener('click',()=>{zones.forEach(z=>{z._el.className='dz';z._el.textContent=z.label;});placed=null;chip.style.opacity='';chip.style.pointerEvents='';chip.classList.remove('sel');selected=null;fb.textContent='';fb.className='fb';});
+  g2.appendChild(act);g2.appendChild(fb);sec.appendChild(g2);
+  return sec;
+}
+
+/* =================== Bau-Engine für große Organigramme =================== */
+function makeBuildBoard(ex){
+  const nodeById={};ex.nodes.forEach(n=>nodeById[n.id]=n);
+  const slots=ex.nodes.filter(n=>!n.fixed);
+  const state={};let selected=null;
+  const frag=document.createDocumentFragment();
+  const pool=document.createElement('div');pool.className='pool';
+  const chips={};
+  shuffle(slots.map(s=>s.correct)).forEach((label,i)=>{
+    const c=document.createElement('div');c.className='ccard';c.textContent=label;c.draggable=true;c.dataset.label=label;c.dataset.inst='k'+i;c.style.maxWidth='none';
+    chips[c.dataset.inst]=c;
+    c.addEventListener('click',()=>{if(c.classList.contains('placed'))return;if(selected===c){c.classList.remove('sel');selected=null;}else{if(selected)selected.classList.remove('sel');selected=c;c.classList.add('sel');}});
+    c.addEventListener('dragstart',e=>{e.dataTransfer.setData('text',c.dataset.inst);selected=c;});
+    pool.appendChild(c);
+  });
+  frag.appendChild(pool);
+  const bw=document.createElement('div');bw.className='boardwrap';
+  const board=document.createElement('div');board.className='board';board.style.width=ex.W+'px';board.style.height=ex.H+'px';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','conn');svg.setAttribute('viewBox',`0 0 ${ex.W} ${ex.H}`);svg.setAttribute('preserveAspectRatio','none');
+  ex.edges.forEach(([p,c])=>{const P=nodeById[p],C=nodeById[c],py=P.y+P.h,cyt=C.y,my=(py+cyt)/2;[[P.cx,py,P.cx,my],[P.cx,my,C.cx,my],[C.cx,my,C.cx,cyt]].forEach(([x1,y1,x2,y2])=>{const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('stroke','#9aa0bd');l.setAttribute('stroke-width','1.3');svg.appendChild(l);});});
+  board.appendChild(svg);
+  function markUsed(){Object.values(chips).forEach(c=>{const used=Object.values(state).includes(c.dataset.inst);c.classList.toggle('placed',used);c.classList.toggle('used',used);if(used)c.classList.remove('sel');});}
+  ex.nodes.forEach(n=>{
+    const el=document.createElement('div');el.style.left=(n.cx-n.w/2)+'px';el.style.top=n.y+'px';el.style.width=n.w+'px';el.style.height=n.h+'px';
+    if(n.fixed){el.className='node gl';el.textContent=n.label;}
+    else{
+      el.className='node bslot';el.dataset.slot=n.id;
+      el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over');});
+      el.addEventListener('dragleave',()=>el.classList.remove('over'));
+      el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('over');place(n.id,e.dataTransfer.getData('text'));});
+      el.addEventListener('click',()=>{if(selected)place(n.id,selected.dataset.inst);else if(state[n.id]){delete state[n.id];el.textContent='';el.className='node bslot';markUsed();}});
+    }
+    board.appendChild(el);n._el=el;
+  });
+  function place(slotId,inst){const chip=chips[inst];if(!chip)return;for(const sid in state){if(state[sid]===inst){delete state[sid];nodeById[sid]._el.textContent='';nodeById[sid]._el.className='node bslot';}}state[slotId]=inst;const sn=nodeById[slotId];sn._el.textContent=chip.dataset.label;sn._el.className='node bslot filled';if(selected){selected.classList.remove('sel');selected=null;}markUsed();}
+  bw.appendChild(board);frag.appendChild(bw);
+  function check(){
+    if(slots.some(s=>!state[s.id]))return{done:false};
+    const groups={};slots.forEach(s=>{(groups[s.group]=groups[s.group]||[]).push(s);});
+    let ok=true;
+    for(const g in groups){const rem=groups[g].map(m=>m.correct);groups[g].forEach(m=>{const lbl=chips[state[m.id]].dataset.label;const idx=rem.indexOf(lbl);if(idx>=0){rem.splice(idx,1);m._el.className='node bslot filled ok lvl-'+m.lvl;}else{m._el.className='node bslot filled bad';ok=false;}});}
+    return{done:true,ok};
+  }
+  function reset(){for(const k in state)delete state[k];slots.forEach(s=>{s._el.className='node bslot';s._el.textContent='';});Object.values(chips).forEach(c=>c.classList.remove('placed','used','sel'));selected=null;}
+  return{frag,check,reset};
+}
+
+/* =================== Aufgabe 5: funktional -> divisional (großes Organigramm bauen) =================== */
+function renderBuildDivisionalTask(){
+  const sec=document.createElement('section');sec.className='task';
+  sec.innerHTML=`<p class="eyebrow">Aufgabe 5 · Entscheiden & umbauen</p><h2>GlobalFood GmbH: funktional lassen oder divisional umbauen?</h2>
+    <p class="lead">Die <b>GlobalFood GmbH</b> stellt drei sehr unterschiedliche Produktgruppen her – <b>Tiefkühlkost, Getränke und Babynahrung</b> – mit eigenen Märkten, Kunden und gesetzlichen Vorgaben. Bisher ist sie <b>funktional</b> organisiert: ein zentraler Einkauf, eine zentrale Produktion und ein zentraler Vertrieb für alles. Die Zentralen sind überlastet und entscheiden zu langsam.</p>`;
+
+  // reference: current functional org (static)
+  const ref=document.createElement('div');ref.className='refwrap';
+  ref.innerHTML='<div class="rl">Aktuell: funktionale Organisation (zentrale Bereiche für alle Produkte)</div>';
+  const refbw=document.createElement('div');refbw.className='boardwrap';
+  const rb=document.createElement('div');rb.className='board';rb.style.width='720px';rb.style.height='150px';
+  const rsvg=document.createElementNS('http://www.w3.org/2000/svg','svg');rsvg.setAttribute('class','conn');rsvg.setAttribute('viewBox','0 0 720 150');rsvg.setAttribute('preserveAspectRatio','none');
+  function rln(x1,y1,x2,y2){const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('stroke','#9aa0bd');l.setAttribute('stroke-width','1.3');rsvg.appendChild(l);}
+  rln(360,56,360,78);rln(150,78,570,78);[150,360,570].forEach(c=>rln(c,78,c,96));
+  rb.appendChild(rsvg);
+  function rmk(cls,x,y,w,h,t){const d=document.createElement('div');d.className='node '+cls;d.style.left=(x-w/2)+'px';d.style.top=y+'px';d.style.width=w+'px';d.style.height=h+'px';d.textContent=t;rb.appendChild(d);}
+  rmk('gl',360,10,220,46,'Geschäftsleitung');
+  rmk('abt',150,96,150,40,'Einkauf');rmk('abt',360,96,150,40,'Produktion');rmk('abt',570,96,150,40,'Vertrieb');
+  refbw.appendChild(rb);ref.appendChild(refbw);sec.appendChild(ref);
+
+  // Step 1 – decision
+  const g1=document.createElement('div');g1.className='gate';
+  g1.innerHTML=`<p style="font-weight:600;margin:0 0 8px">1. Was ist hier sinnvoll?</p>`;
+  const dec=document.createElement('div');dec.className='decide';
+  const why1=document.createElement('div');why1.className='why';
+  const opts=["Funktional lassen und mehr Personal in die Zentralen holen","Eine Stabsstelle einrichten","Auf eine divisionale Organisation (Sparten je Produktgruppe) umstellen"];
+  const ans=2;let opened=false;
+  opts.forEach((o,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.addEventListener('click',()=>{
+      dec.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===ans)x.classList.add('correct');});
+      if(j!==ans)b.classList.add('wrong');
+      why1.innerHTML=j===ans
+        ?"Richtig: Die Produkte sind <b>zu unterschiedlich</b> für eine gemeinsame Zentrale. Eigenständige <b>Sparten</b> (divisional) mit je eigenem Einkauf, eigener Produktion und eigenem Vertrieb entscheiden kundennah und schnell."
+        :(j===1?"Eine Stabsstelle liefert nur Fachwissen – sie löst die <b>Überlastung der Zentralen</b> bei so unterschiedlichen Produkten nicht. Hier muss die Struktur nach Sparten geteilt werden.":"Mehr Personal entlastet kurz, aber die Zentrale bleibt für <b>völlig verschiedene Märkte</b> zuständig und zu langsam. Besser nach <b>Sparten</b> aufteilen.");
+      why1.classList.add('show');
+      if(!opened){opened=true;g2.style.display='block';}
+    });
+    dec.appendChild(b);
+  });
+  g1.appendChild(dec);g1.appendChild(why1);sec.appendChild(g1);
+
+  // Step 2 – build divisional
+  const g2=document.createElement('div');g2.style.display='none';
+  g2.innerHTML=`<p style="font-weight:600;margin:16px 0 6px">2. Baue die neue, divisionale Struktur. Ziehe die Sparten und ihre Funktionen in die Kästen.</p>`;
+  const sp=[["Sparte Tiefkühlkost",220],["Sparte Getränke",590],["Sparte Babynahrung",960]];
+  const nodes=[{id:"gl",cx:590,y:10,w:220,h:46,fixed:true,label:"Geschäftsleitung"}];
+  const edges=[];
+  sp.forEach((s,i)=>{
+    const sid="sp"+i;nodes.push({id:sid,cx:s[1],y:96,w:200,h:44,lvl:"sparte",correct:s[0],group:"gl"});edges.push(["gl",sid]);
+    [["Einkauf",s[1]-116],["Produktion",s[1]],["Vertrieb",s[1]+116]].forEach(([f,fx],k)=>{const fid=sid+"f"+k;nodes.push({id:fid,cx:fx,y:188,w:108,h:40,lvl:"func",correct:f,group:sid});edges.push([sid,fid]);});
+  });
+  const built=makeBuildBoard({W:1180,H:250,nodes,edges});
+  g2.appendChild(built.frag);
+  const act=document.createElement('div');act.className='actions';
+  const bc=document.createElement('button');bc.className='btn primary';bc.textContent='Prüfen';
+  const bl=document.createElement('button');bl.className='btn ghost';bl.textContent='Zurücksetzen';
+  act.append(bc,bl);const fb=document.createElement('div');fb.className='fb';
+  bc.addEventListener('click',()=>{const r=built.check();if(!r.done){fb.textContent='Es sind noch nicht alle Kästen belegt.';fb.className='fb no';return;}fb.innerHTML=r.ok?'Perfekt! Jede Sparte hat jetzt ihren <b>eigenen</b> Einkauf, ihre eigene Produktion und ihren eigenen Vertrieb – so entstehen zwar <b>Doppelfunktionen</b>, aber jede Sparte kann eigenständig auf ihren Markt reagieren.':'Noch nicht ganz – die rot markierten Kästen passen nicht. Jede Sparte braucht genau: Einkauf, Produktion und Vertrieb.';fb.className='fb '+(r.ok?'ok':'no');});
+  bl.addEventListener('click',()=>{built.reset();fb.textContent='';fb.className='fb';});
+  g2.appendChild(act);g2.appendChild(fb);sec.appendChild(g2);
+  return sec;
+}
+
+/* =================== Insight =================== */
+function renderInsight(){
+  const sec=document.createElement('section');sec.className='task';
+  const box=document.createElement('div');box.className='insight';
+  box.innerHTML=`<h3>Das solltest du mitnehmen</h3>
+    <p>Eine <b class="s">Stabsstelle</b> richtet man ein, wenn der Leitung <b>Fachwissen</b> fehlt (Recht, IT, Controlling) – sie berät und entlastet, <b>ohne</b> die Linienstruktur zu ändern.</p>
+    <p>Von funktional auf <b class="d">divisional</b> stellt man um, wenn die <b>Produkte, Kunden oder Regionen zu unterschiedlich</b> werden und eine zentrale Leitung nicht mehr schnell genug reagieren kann.</p>
+    <p style="margin:0">Faustregel: erst das <b>Problem</b> erkennen – dann die passende Organisationsform wählen. Nicht jede Firma braucht Stäbe oder Sparten.</p>`;
+  sec.appendChild(box);return sec;
+}
+
+main.appendChild(renderBucketTask());
+main.appendChild(renderMCQTask());
+main.appendChild(renderPlaceTask());
+main.appendChild(renderDecideStabTask());
+main.appendChild(renderBuildDivisionalTask());
+main.appendChild(renderInsight());
+</script>
+</body>
+</html>
